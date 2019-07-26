@@ -22,7 +22,7 @@ namespace EmployeesLibrary.Tests
                 EmployeeId,ManagerId,Salary
                 employee1,,500000
                 employee2,employee1,250000");
-            Assert.True(employees3.IsCsvDataValid, "CSV data with just header and rows of employees is valid");
+            Assert.True(employees3.IsCsvDataValid, "CSV data with header and rows of employees is valid");
 
             Employees employees4 = new Employees(@"
                 employee1,,500000");
@@ -85,7 +85,7 @@ namespace EmployeesLibrary.Tests
                 employee2,employee3,250000
                 employee3,employee2,150000");
 
-            Assert.False(employees.IsCsvDataValid, "There should be circular reference.");
+            Assert.False(employees.IsCsvDataValid, "There are circular references.");
         }
 
 
