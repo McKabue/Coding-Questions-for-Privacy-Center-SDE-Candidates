@@ -39,4 +39,12 @@
 
    `dotnet sln add ./EmployeesLibrary.Tests/EmployeesLibrary.Tests.csproj`
 
-7. To run tests
+7. Running Unit tests.
+    go to **EmployeesLibrary.Tests** directory.
+   `cd EmployeesLibrary.Tests`
+
+   To run all tests, execute:
+   `dotnet test`
+
+   To generate a test log file, run:
+   `dotnet test --logger:trx`

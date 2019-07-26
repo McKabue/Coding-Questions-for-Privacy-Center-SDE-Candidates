@@ -7,27 +7,43 @@ namespace EmployeesLibrary
 {
     public class Employees
     {
-        private (bool, List<EmployeeModel>) IsCSVDataValid = (false, null);
+        private readonly (bool, List<EmployeeModel>) ValidatedEmployeesCsvData = (false, null);
 
         /// <summary>
-        /// This receives an employees info CSV string and validates it.
+        /// This receives employees CSV data string and validates it.
         /// </summary>
         /// <param name="employees"></param>
         public Employees(string employees)
         {
             if (employees.HasValue())
             {
-                IsCSVDataValid = Utils.IsCSVDataValid(employees);
+                ValidatedEmployeesCsvData = Utils.ValidateEmployeesCsvData(employees);
             }
         }
 
-        public bool IsValidCSV { get => IsCSVDataValid.Item1; }
-
-        public bool DoesAnyEmployeeHaveMultipleManagers
+        /// <summary>
+        /// Is true if employee data is is valid.
+        /// </summary>
+        public bool IsCsvDataValid
         {
             get
             {
-                return IsCSVDataValid.Item2
+                return ValidatedEmployeesCsvData.Item1 &&
+                !SomeEmployeesHaveMultipleManagers &&
+                !ThereAreSeveralCEO &&
+                !ThereAreCircularReferences &&
+                !SomeManagersAreNotEmployees;
+            }
+        }
+
+        /// <summary>
+        /// Is true value if some employees have more than one manager.
+        /// </summary>
+        public bool SomeEmployeesHaveMultipleManagers
+        {
+            get
+            {
+                return ValidatedEmployeesCsvData.Item2
                     ?.Where(i => i.ManagerId.HasValue())
                     ?.GroupBy(i => i.EmployeeId)
                     ?.Any(i =>
@@ -36,26 +52,32 @@ namespace EmployeesLibrary
             }
         }
 
+        /// <summary>
+        /// Is true value if there are more that one employees with no managers.
+        /// </summary>
         public bool ThereAreSeveralCEO
         {
             get
             {
-                return IsCSVDataValid.Item2?.Where(i => !i.ManagerId.HasValue())?.Count() > 1;
+                return ValidatedEmployeesCsvData.Item2?.Where(i => !i.ManagerId.HasValue())?.Count() > 1;
             }
         }
 
-        public bool ThereIsCircularReference
+        /// <summary>
+        /// Is true value if there are circular references.
+        /// </summary>
+        public bool ThereAreCircularReferences
         {
             get
             {
-                return IsCSVDataValid.Item2
+                return ValidatedEmployeesCsvData.Item2
                     ?.Where(i => i.ManagerId.HasValue())
                     ?.GroupBy(i => i.ManagerId)
                     ?.Any(i =>
                         {
                             string currentManagerId = i.Key;
                             IEnumerable<string> employeesUnderCurrentManager = i?.Select(k => k.EmployeeId);
-                            IEnumerable<string> managersOverCurrentManager = IsCSVDataValid.Item2?.Where(j => j.EmployeeId == currentManagerId)?.Select(k => k.ManagerId);
+                            IEnumerable<string> managersOverCurrentManager = ValidatedEmployeesCsvData.Item2?.Where(j => j.EmployeeId == currentManagerId)?.Select(k => k.ManagerId);
 
                             return employeesUnderCurrentManager?.Intersect(managersOverCurrentManager)?.Any() ?? false;
                         })
@@ -64,28 +86,37 @@ namespace EmployeesLibrary
             }
         }
 
+        /// <summary>
+        /// Is true value if some managers are not employees.
+        /// </summary>
         public bool SomeManagersAreNotEmployees
         {
             get
             {
-                return IsCSVDataValid.Item2
+                return ValidatedEmployeesCsvData.Item2
                     ?.Where(i => i.ManagerId.HasValue())
                     ?.GroupBy(i => i.ManagerId)
-                    ?.Any(i => IsCSVDataValid.Item2?.Any(j => j.EmployeeId == i.Key) ?? false)
+                    ?.Any(i => !ValidatedEmployeesCsvData.Item2.Any(j => j.EmployeeId == i.Key))
 
                 ?? false;
             }
         }
 
+        /// <summary>
+        /// The salary budget from a manager is defined as the sum of the salaries of all the employees 
+        /// reporting(directly or indirectly) to a specified manager, plus the salary of the manager.
+        /// </summary>
+        /// <param name="managerId"></param>
+        /// <returns>salary budget from the specified manager</returns>
         public int SalaryBudget(string managerId)
         {
-            int salaryBudget(string _managerId, int salary = 0)
+            int salaryBudget(string employeeId)
             {
-                var employees = IsCSVDataValid.Item2.Where(i => i.ManagerId == _managerId);
+                IEnumerable<EmployeeModel> employees = ValidatedEmployeesCsvData.Item2.Where(i => i.ManagerId == employeeId);
                 return (employees?.Sum(i => salaryBudget(i.EmployeeId)) ?? 0) + (employees?.Sum(i => i.Salary) ?? 0);
             }
 
-            var employee = IsCSVDataValid.Item2.FirstOrDefault(i => i.EmployeeId == managerId);
+            EmployeeModel employee = ValidatedEmployeesCsvData.Item2.FirstOrDefault(i => i.EmployeeId == managerId);
             return salaryBudget(employee?.EmployeeId) + (employee?.Salary ?? 0);
         }
     }
