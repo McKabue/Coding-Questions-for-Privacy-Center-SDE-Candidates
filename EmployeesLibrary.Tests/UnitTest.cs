@@ -85,7 +85,7 @@ namespace EmployeesLibrary.Tests
                 employee2,employee3,250000
                 employee3,employee2,150000");
 
-            Assert.False(employees.IsCsvDataValid, "There are circular references.");
+            Assert.False(employees.IsCsvDataValid, "There should be no circular references.");
         }
 
 
