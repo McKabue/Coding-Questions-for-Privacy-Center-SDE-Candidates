@@ -1,4 +1,7 @@
 # Linux Ubuntu Setup using Visual Studio Code
+
+## [Software Developer Engineers](/Software Developer Engineers)
+
 1. Create folder called **Employees** and inside **Employees** directory, create a .Net Core solution. 
 
    `mkdir Employees`
@@ -48,3 +51,5 @@
 
    To generate a test log file, run:
    `dotnet test --logger:trx`
+
+## [Software Developer Engineers](/Web Developer Engineers)
